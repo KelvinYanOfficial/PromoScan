@@ -25,17 +25,21 @@
 </head>
 <body>
   <h1>PromoScan AI</h1>
-  <p>Paste a YouTube description below:</p>
-  <textarea id="input" rows="10" placeholder="Paste description here..."></textarea>
-  <button onclick="scanPromo()">Scan for Promo Codes</button>
-  <div id="output"></div>
+  <p>Enter a brand name or product:</p>
+  <input type="text" id="brand" placeholder="e.g. nordvpn, hello fresh" />
+  <button onclick="fetchCodes()">Find Promo Codes</button>
+
+  <div id="output">⏳ Waiting for input...</div>
 
   <script>
-    function scanPromo() {
-      const text = document.getElementById("input").value;
-      const matches = text.match(/(?:code|slash|promo)[:\-]?\s*([A-Za-z0-9]+)/gi);
-      const output = matches ? matches.join('\n') : "No promo codes found.";
-      document.getElementById("output").textContent = output;
+    async function fetchCodes() {
+      const brand = document.getElementById("brand").value;
+      const output = document.getElementById("output");
+      output.textContent = "🔍 Searching YouTube for promo codes...";
+
+      const res = await fetch(`/api/scan?brand=${encodeURIComponent(brand)}`);
+      const data = await res.json();
+      output.textContent = data.result || "❌ No promo codes found.";
     }
   </script>
 </body>
