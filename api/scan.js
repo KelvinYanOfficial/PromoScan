@@ -1,12 +1,7 @@
-
-// api/scan.js
-
 export default async function handler(req, res) {
   const brand = req.query.brand || "";
-  const YT_API = AIzaSyDolaptFNsBtRrq4RG2f8Ic-YRFn4IW8ns;
-  const OPENAI_API = Sk-or-v1-ba0ed97c51634f14839c4c2d62304dcb860021799984ff18aaacb27ddd1f8c41
-
-;
+  const YT_API = "AIzaSyDolaptFNsBtRrq4RG2f8Ic-YRFn4IW8ns";
+  const OPENAI_API = "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";
 
   if (!brand) return res.status(400).json({ result: "Missing brand name" });
 
@@ -17,6 +12,10 @@ export default async function handler(req, res) {
     );
     const ytData = await ytRes.json();
     const videoIds = ytData.items.map(item => item.id.videoId).join(",");
+
+    if (!videoIds) {
+      return res.status(404).json({ result: "No videos found." });
+    }
 
     // 2. Get video descriptions
     const detailRes = await fetch(
@@ -50,11 +49,15 @@ ${descriptions}
     });
 
     const aiData = await aiRes.json();
-    const reply = aiData.choices?.[0]?.message?.content || "No promo codes found.";
 
+    if (!aiData.choices || !aiData.choices[0]) {
+      return res.status(500).json({ result: "AI failed to respond." });
+    }
+
+    const reply = aiData.choices[0].message.content;
     res.status(200).json({ result: reply });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ result: "Error processing request." });
+    res.status(500).json({ result: "Server error. Check API keys or limits." });
   }
 }
