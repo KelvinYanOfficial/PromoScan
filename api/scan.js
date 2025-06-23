@@ -6,7 +6,6 @@ export default async function handler(req, res) {
   if (!brand) return res.status(400).json({ result: "Missing brand name" });
 
   try {
-    // 1. Search YouTube for videos matching the brand
     const ytRes = await fetch(
       `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(brand)}&key=${YT_API}`
     );
@@ -17,14 +16,12 @@ export default async function handler(req, res) {
       return res.status(404).json({ result: "No videos found." });
     }
 
-    // 2. Get video descriptions
     const detailRes = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds}&key=${YT_API}`
     );
     const detailData = await detailRes.json();
     const descriptions = detailData.items.map(v => v.snippet.description).join("\n---\n");
 
-    // 3. Send to OpenAI for promo code extraction
     const prompt = `
 These are YouTube video descriptions about "${brand}". Extract any promo codes, sponsor URLs, or brand offers. Show them cleanly like:
 
@@ -50,14 +47,17 @@ ${descriptions}
 
     const aiData = await aiRes.json();
 
-    if (!aiData.choices || !aiData.choices[0]) {
-      return res.status(500).json({ result: "AI failed to respond." });
+    if (!aiData || !aiData.choices || !aiData.choices[0]?.message?.content) {
+      console.log("AI response error:", aiData);
+      return res.status(500).json({ result: "AI failed to respond or format was invalid." });
     }
 
     const reply = aiData.choices[0].message.content;
     res.status(200).json({ result: reply });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ result: "Server error. Check API keys or limits." });
+    console.error("Server error:", err);
+    res.status(500).json({ result: "Server error. Check logs or API limits." });
   }
 }
+
