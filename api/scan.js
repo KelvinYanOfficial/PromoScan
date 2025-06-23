@@ -6,6 +6,7 @@ export default async function handler(req, res) {
   if (!brand) return res.status(400).json({ result: "Missing brand name" });
 
   try {
+    // Get video IDs
     const ytRes = await fetch(
       `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${encodeURIComponent(brand)}&key=${YT_API}`
     );
@@ -16,6 +17,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ result: "No videos found." });
     }
 
+    // Get video descriptions
     const detailRes = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds}&key=${YT_API}`
     );
@@ -32,6 +34,7 @@ Descriptions:
 ${descriptions}
     `.trim();
 
+    // Send to OpenAI
     const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -47,8 +50,10 @@ ${descriptions}
 
     const aiData = await aiRes.json();
 
+    // Log the full response to Vercel logs
+    console.log("🔍 OpenAI raw response:", JSON.stringify(aiData, null, 2));
+
     if (!aiData || !aiData.choices || !aiData.choices[0]?.message?.content) {
-      console.log("AI response error:", aiData);
       return res.status(500).json({ result: "AI failed to respond or format was invalid." });
     }
 
@@ -56,8 +61,7 @@ ${descriptions}
     res.status(200).json({ result: reply });
 
   } catch (err) {
-    console.error("Server error:", err);
+    console.error("❌ Server error:", err);
     res.status(500).json({ result: "Server error. Check logs or API limits." });
   }
 }
-
