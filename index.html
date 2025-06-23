@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PromoScan AI</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, button, textarea {
+      font-size: 1rem;
+      padding: 0.5rem;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    #output {
+      margin-top: 1rem;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>PromoScan AI</h1>
+  <p>Paste a YouTube description below:</p>
+  <textarea id="input" rows="10" placeholder="Paste description here..."></textarea>
+  <button onclick="scanPromo()">Scan for Promo Codes</button>
+  <div id="output"></div>
+
+  <script>
+    function scanPromo() {
+      const text = document.getElementById("input").value;
+      const matches = text.match(/(?:code|slash|promo)[:\-]?\s*([A-Za-z0-9]+)/gi);
+      const output = matches ? matches.join('\n') : "No promo codes found.";
+      document.getElementById("output").textContent = output;
+    }
+  </script>
+</body>
+</html>
